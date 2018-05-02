@@ -16,13 +16,59 @@ Fringe insertValidSucc(Fringe fringe, int value, int goal, int a) {
   s.parent = fringe.states;
   s.action = a;
   s.value = value;
+  s.depth = fringe.states->depth + 1;
+  //printf("%d\n", s.depth);
   
   return insertFringe(fringe, s);
 }
 
-void showPath(State f){
+void reversePath(State* s, int depth, int **arr){
+	printf("%d\n", depth);
+	while(depth-1 > 0){
+		
+		arr[depth][0] = s->value;
+		arr[depth][1] = s->action;
+		s = s->parent;
+		depth -= 1;
+	}
+}
 	
-
+	
+void showPath(State *s){
+	int cost = 0, depth = s->depth;
+	int **arr;
+	arr = malloc(sizeof(int*) * depth);
+	for(int i = 0; i<depth; i++){
+		arr[i] = malloc(sizeof(int)*2);
+	}
+	printf("\n");
+	reversePath(s, depth, arr);
+	printf("x\n");
+	for(int i = 0; i<depth; i++){
+		switch(arr[i][1]){
+			case 1: printf("%d (+1)-> ", arr[i][0]);
+			cost += 1;
+			break;
+			case 2: printf("%d (*2)-> ", arr[i][0]); 
+			cost += 2;
+			break; 
+			case 3: printf("%d (*3)-> ", arr[i][0]);
+			cost += 2;
+			break;
+			case 4: printf("%d (-1)-> ", arr[i][0]);
+			cost += 1;
+			break;
+			case 5: printf("%d (/2)-> ", arr[i][0]);
+			cost += 3;
+			break;
+			case 6: printf("%d (/3)-> ", arr[i][0]);
+			cost += 3;
+			break;
+		}
+	}
+	printf("\nlength = %d, cost = %d\n", depth, cost);
+}
+			
 void search(int mode, int start, int goal) {
   Fringe fringe;
   State state;
@@ -33,6 +79,7 @@ void search(int mode, int start, int goal) {
   fringe = makeFringe(mode);
   state.value = start;
   state.action = 0;
+  state.depth = 0;
   state.parent = NULL;
   fringe = insertFringe(fringe, state);
   while (!isEmptyFringe(fringe)) {
@@ -61,7 +108,7 @@ void search(int mode, int start, int goal) {
   }
   printf("(%d nodes visited)\n", visited);
   showStats(fringe);
-  showPath()
+  showPath(fringe.states);
   deallocFringe(fringe);  
 }
 

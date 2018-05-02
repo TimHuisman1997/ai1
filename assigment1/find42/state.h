@@ -12,6 +12,7 @@
 typedef struct State {
   int value;
   int action;
+  int depth;
   struct State *parent;
 } State;
 
