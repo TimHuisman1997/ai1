@@ -5,70 +5,27 @@
 #include "state.h"
 #include "fringe.h"
 
-#define RANGE 1000000
 
-Fringe insertValidSucc(Fringe fringe, int value, int goal, int a) {
+#define RANGE 1000000
+#define ARRSIZE 10
+
+Fringe insertValidSucc(Fringe fringe, int value, int goal) {
   State s;
   if (((value <= 0) || (value > RANGE)) && !(value == goal)) {
     /* ignore states that are out of bounds */
     return fringe;
   }
-  s.parent = fringe.states;
-  s.action = a;
-  s.value = value;
+  //printf("%d\n", fringe.states->depth);
   s.depth = fringe.states->depth + 1;
+  s.value = value;
+  //printf("x\n");
+  s.path = fringe.states->path;
+  s.path[fringe.states->depth] = fringe.states->value;
+  //printf("y\n");
   
   return insertFringe(fringe, s);
 }
 
-void reversePath(State* s, int depth, int **arr){
-	//printf("%d\n", depth);
-	while(depth-1 > 0){
-		
-		arr[depth][0] = s->value;
-		arr[depth][1] = s->action;
-		s = s->parent;
-		depth -= 1;
-	}
-}
-	
-	
-void showPath(State *s){
-	int cost = 0, depth = s->depth; 
-	int **arr;
-	arr = malloc(sizeof(int*) * depth);
-	for(int i = 0; i<depth; i++){
-		arr[i] = malloc(sizeof(int)*2);
-	}
-	printf("\n");
-	reversePath(s, depth, arr);
-	printf("x\n");
-	for(int i = 0; i<depth; i++){
-		switch(arr[i][1]){
-			case 1: printf("%d (+1)-> ", arr[i][0]);
-			cost += 1;
-			break;
-			case 2: printf("%d (*2)-> ", arr[i][0]); 
-			cost += 2;
-			break; 
-			case 3: printf("%d (*3)-> ", arr[i][0]);
-			cost += 2;
-			break;
-			case 4: printf("%d (-1)-> ", arr[i][0]);
-			cost += 1;
-			break;
-			case 5: printf("%d (/2)-> ", arr[i][0]);
-			cost += 3;
-			break;
-			case 6: printf("%d (/3)-> ", arr[i][0]);
-			cost += 3;
-			break;
-		}
-	}
-	printf("\nlength = %d, cost = %d\n", depth, cost);
-}
-
-			
 void search(int mode, int start, int goal) {
   Fringe fringe;
   State state;
@@ -78,9 +35,12 @@ void search(int mode, int start, int goal) {
 
   fringe = makeFringe(mode);
   state.value = start;
-  state.action = 0;
   state.depth = 0;
-  state.parent = NULL;
+  state.path = malloc(sizeof(int)*10);
+  //state.path[0] = 10;
+  printf("%d\n", state.path[0]);
+
+	  
   fringe = insertFringe(fringe, state);
   while (!isEmptyFringe(fringe)) {
     /* get a state from the fringe */
@@ -93,15 +53,13 @@ void search(int mode, int start, int goal) {
       break;
     }
     /* insert neighbouring states */
-    fringe = insertValidSucc(fringe, value+1, goal, 1); /* rule n->n + 1      */
-    fringe = insertValidSucc(fringe, 2*value, goal, 2); /* rule n->2*n        */
-    fringe = insertValidSucc(fringe, 3*value, goal, 3); /* rule n->3*n        */
-    fringe = insertValidSucc(fringe, value-1, goal, 4); /* rule n->n - 1      */
-    fringe = insertValidSucc(fringe, value/2, goal, 5); /* rule n->floor(n/2) */
-    fringe = insertValidSucc(fringe, value/3, goal, 6); /* rule n->floor(n/3) */
-
+    fringe = insertValidSucc(fringe, value+1, goal); /* rule n->n + 1      */
+    fringe = insertValidSucc(fringe, 2*value, goal); /* rule n->2*n        */
+    fringe = insertValidSucc(fringe, 3*value, goal); /* rule n->3*n        */
+    fringe = insertValidSucc(fringe, value-1, goal); /* rule n->n - 1      */
+    fringe = insertValidSucc(fringe, value/2, goal); /* rule n->floor(n/2) */
+    fringe = insertValidSucc(fringe, value/3, goal); /* rule n->floor(n/3) */
   }
-  printf("x\n");
   if (goalReached == 0) {
     printf("goal not reachable ");
   } else {
@@ -109,7 +67,10 @@ void search(int mode, int start, int goal) {
   }
   printf("(%d nodes visited)\n", visited);
   showStats(fringe);
-  showPath(fringe.states);
+  for(int i = 0; i<ARRSIZE; i++){
+	  printf("%d ", fringe.states->path[i]);
+  }
+  printf("\n");
   deallocFringe(fringe);  
 }
 
@@ -121,7 +82,7 @@ int main(int argc, char *argv[]) {
   }
   fringetype = 0;
   
-  if ((strcmp(argv[1], "STACK") == 0) || (strcmp(argv[1], "LIFO") == 0)) { 
+  if ((strcmp(argv[1], "STACK") == 0) || (strcmp(argv[1], "LIFO") == 0)) {
     fringetype = STACK;
   } else if (strcmp(argv[1], "FIFO") == 0) {
     fringetype = FIFO;
