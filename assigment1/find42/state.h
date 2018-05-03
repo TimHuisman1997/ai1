@@ -8,12 +8,11 @@
  *       contain pointers!
  */
 
-
-typedef struct State {
+typedef struct {
   int value;
-  int action;
   int depth;
-  struct State *parent;
+  int action;
+  
 } State;
 
 #endif

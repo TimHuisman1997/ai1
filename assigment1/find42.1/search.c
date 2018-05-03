@@ -5,46 +5,98 @@
 #include "state.h"
 #include "fringe.h"
 
-
 #define RANGE 1000000
-#define ARRSIZE 10
 
-Fringe insertValidSucc(Fringe fringe, int value, int goal) {
+Fringe insertValidSucc(Fringe fringe, Fringe prSt, int value, State state, int action, int cost) {
   State s;
-  if (((value <= 0) || (value > RANGE)) && !(value == goal)) {
+  
+  if ((value < 0) || (value > RANGE)) {
     /* ignore states that are out of bounds */
     return fringe;
   }
-  //printf("%d\n", fringe.states->depth);
-  s.depth = fringe.states->depth + 1;
-  s.value = value;
-  //printf("x\n");
-  s.path = fringe.states->path;
-  s.path[fringe.states->depth] = fringe.states->value;
-  //printf("y\n");
   
+  for(int i = 0; i < prSt.insertCnt; i++){
+	if(value == prSt.states[i].value){
+	  /* ignore states that are already visited */
+      return fringe;
+	  }
+  }
+  //printf(" %d", action);
+  s.value = value;
+  s.depth = state.depth + 1;
+  s.action = action;
+  s.cost = state.cost + cost;
+  //printf(" %d\n", s.action);
   return insertFringe(fringe, s);
 }
 
+void findPreState(int value, Fringe f, State *s){
+	for(int i = 0; i < f.insertCnt; i++){
+		if(value == f.states[i].value){
+			*s = f.states[i];
+		}
+	}
+}
+
+
+
+void printPath(State s, Fringe f){
+	int preValue, value = s.value;
+	switch (s.action){
+		case 1: preValue = value - 1;
+		        findPreState(preValue, f, &s);
+		        printPath(s, f);
+			    printf("(+1)-> %d", value);
+				break;
+		case 2: preValue = value/2;
+				findPreState(preValue, f, &s);
+				printPath(s, f);
+				printf("(*2)-> %d", value);
+				break;
+		case 3: preValue = value/3;
+				findPreState(preValue, f, &s);
+				printPath(s, f);
+				printf(" (*3)-> %d", value);
+				break;
+		case 4: preValue = value + 1;
+		        findPreState(preValue, f, &s);
+		        printPath(s, f);
+			    printf(" (-1)-> %d ", value);
+				break;
+		case 5: preValue = value * 2;
+		        findPreState(preValue, f, &s);
+		        printPath(s, f);
+			    printf(" (/2)-> %d", value);
+				break;
+		case 6: preValue = value * 3;
+		        findPreState(preValue, f, &s);
+		        printPath(s, f);
+			    printf(" (/3)-> %d ", value);
+				break;
+		case 0: printf("%d", value);
+	}
+	printf("\n");
+}
+
 void search(int mode, int start, int goal) {
-  Fringe fringe;
+  Fringe fringe, prSt;
   State state;
   int goalReached = 0;
   int visited = 0;
   int value;
 
+  prSt = makeFringe(1);
   fringe = makeFringe(mode);
   state.value = start;
   state.depth = 0;
-  state.path = malloc(sizeof(int)*10);
-  //state.path[0] = 10;
-  printf("%d\n", state.path[0]);
-
-	  
+  state.action = 0;
+  state.cost = 0;
   fringe = insertFringe(fringe, state);
   while (!isEmptyFringe(fringe)) {
     /* get a state from the fringe */
     fringe = removeFringe(fringe, &state);
+    //printf("%d\n", state.action);
+    prSt = insertFringe(prSt, state);
     visited++;
     /* is state the goal? */
     value = state.value;
@@ -52,14 +104,16 @@ void search(int mode, int start, int goal) {
       goalReached = 1;
       break;
     }
+    
     /* insert neighbouring states */
-    fringe = insertValidSucc(fringe, value+1, goal); /* rule n->n + 1      */
-    fringe = insertValidSucc(fringe, 2*value, goal); /* rule n->2*n        */
-    fringe = insertValidSucc(fringe, 3*value, goal); /* rule n->3*n        */
-    fringe = insertValidSucc(fringe, value-1, goal); /* rule n->n - 1      */
-    fringe = insertValidSucc(fringe, value/2, goal); /* rule n->floor(n/2) */
-    fringe = insertValidSucc(fringe, value/3, goal); /* rule n->floor(n/3) */
+    fringe = insertValidSucc(fringe, prSt, value+1, state, 1, 1); /* rule n->n + 1      */
+    fringe = insertValidSucc(fringe, prSt, 2*value, state, 2, 2); /* rule n->2*n        */
+    fringe = insertValidSucc(fringe, prSt, 3*value, state, 3, 2); /* rule n->3*n        */
+    fringe = insertValidSucc(fringe, prSt, value-1, state, 4, 1); /* rule n->n - 1      */
+    fringe = insertValidSucc(fringe, prSt, value/2, state, 5, 3); /* rule n->floor(n/2) */
+    fringe = insertValidSucc(fringe, prSt, value/3, state, 6, 3); /* rule n->floor(n/3) */
   }
+  printf("last action = %d\n", state.action);
   if (goalReached == 0) {
     printf("goal not reachable ");
   } else {
@@ -67,10 +121,8 @@ void search(int mode, int start, int goal) {
   }
   printf("(%d nodes visited)\n", visited);
   showStats(fringe);
-  for(int i = 0; i<ARRSIZE; i++){
-	  printf("%d ", fringe.states->path[i]);
-  }
-  printf("\n");
+  printPath(state, prSt);
+  printf("length = %d, cost = %d\n", state.depth+1, state.cost);
   deallocFringe(fringe);  
 }
 

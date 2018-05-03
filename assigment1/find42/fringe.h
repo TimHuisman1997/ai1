@@ -12,7 +12,6 @@
 #define PRIO  4
 #define HEAP  5
 
-
 typedef struct Fringe {
   int mode;      /* can be LIFO(STACK), FIFO, or PRIO(HEAP)          */
   int size;      /* number of elements in the fringe                 */
