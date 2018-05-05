@@ -4,6 +4,7 @@
 
 #include "state.h"
 #include "fringe.h"
+#include "list.h"
 
 #define RANGE 1000000
 
@@ -21,62 +22,15 @@ Fringe insertValidSucc(Fringe fringe, Fringe prSt, int value, State state, int a
       return fringe;
 	  }
   }
-  //printf(" %d", action);
   s.value = value;
-  s.depth = state.depth + 1;
-  s.action = action;
-  s.cost = state.cost + cost;
-  //printf(" %d\n", s.action);
+  s.action = state.action;
+  addItem(action, s.action);
+  printf("%d\n", isEmptyList(s.action));
+   
+  
   return insertFringe(fringe, s);
 }
 
-void findPreState(int value, Fringe f, State *s){
-	for(int i = 0; i < f.insertCnt; i++){
-		if(value == f.states[i].value){
-			*s = f.states[i];
-		}
-	}
-}
-
-
-
-void printPath(State s, Fringe f){
-	int preValue, value = s.value;
-	switch (s.action){
-		case 1: preValue = value - 1;
-		        findPreState(preValue, f, &s);
-		        printPath(s, f);
-			    printf("(+1)-> %d", value);
-				break;
-		case 2: preValue = value/2;
-				findPreState(preValue, f, &s);
-				printPath(s, f);
-				printf("(*2)-> %d", value);
-				break;
-		case 3: preValue = value/3;
-				findPreState(preValue, f, &s);
-				printPath(s, f);
-				printf(" (*3)-> %d", value);
-				break;
-		case 4: preValue = value + 1;
-		        findPreState(preValue, f, &s);
-		        printPath(s, f);
-			    printf(" (-1)-> %d ", value);
-				break;
-		case 5: preValue = value * 2;
-		        findPreState(preValue, f, &s);
-		        printPath(s, f);
-			    printf(" (/2)-> %d", value);
-				break;
-		case 6: preValue = value * 3;
-		        findPreState(preValue, f, &s);
-		        printPath(s, f);
-			    printf(" (/3)-> %d ", value);
-				break;
-		case 0: printf("%d", value);
-	}
-	printf("\n");
-}
 
 void search(int mode, int start, int goal) {
   Fringe fringe, prSt;
@@ -84,14 +38,14 @@ void search(int mode, int start, int goal) {
   int goalReached = 0;
   int visited = 0;
   int value;
+  List actions = newEmptyList();
 
   prSt = makeFringe(1);
   fringe = makeFringe(mode);
   state.value = start;
-  state.depth = 0;
-  state.action = 0;
-  state.cost = 0;
+  state.action = newEmptyList();
   fringe = insertFringe(fringe, state);
+  addItem(7, state.action);
   while (!isEmptyFringe(fringe)) {
     /* get a state from the fringe */
     fringe = removeFringe(fringe, &state);
@@ -113,7 +67,13 @@ void search(int mode, int start, int goal) {
     fringe = insertValidSucc(fringe, prSt, value/2, state, 5, 3); /* rule n->floor(n/2) */
     fringe = insertValidSucc(fringe, prSt, value/3, state, 6, 3); /* rule n->floor(n/3) */
   }
-  printf("last action = %d\n", state.action);
+  
+  actions = state.action;
+  
+  while(!isEmptyList(actions)){
+	  printf("%d ", firstItem(actions));
+  }
+  printf("\n");
   if (goalReached == 0) {
     printf("goal not reachable ");
   } else {
@@ -121,8 +81,6 @@ void search(int mode, int start, int goal) {
   }
   printf("(%d nodes visited)\n", visited);
   showStats(fringe);
-  printPath(state, prSt);
-  printf("length = %d, cost = %d\n", state.depth+1, state.cost);
   deallocFringe(fringe);  
 }
 
