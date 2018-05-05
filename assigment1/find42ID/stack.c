@@ -4,12 +4,14 @@
 
 #include "stack.h"
 
-Stack newStack (int s) {
+#define MAXS 500000
+
+Stack newStack () {
 	Stack st;
-	st.array = malloc(s*sizeof(State));
+	st.array = malloc(MAXS*sizeof(State));
 	assert(st.array != NULL);
 	st.top = 0;
-	st.size = s;
+	st.size = MAXS;
 	return st;
 }
 
@@ -22,7 +24,8 @@ void doubleStackSize(Stack *stp) {
 
 void push (State s, Stack *stp) {
 	if(stp->top == stp->size){
-		doubleStackSize(stp);
+		printf("push(..): fatal error, out of memory.\n");
+		exit(0);
 	}
 	stp->array[stp->top] = s;
 	(stp->top)++;

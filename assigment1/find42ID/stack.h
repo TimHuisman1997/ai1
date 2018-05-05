@@ -9,4 +9,18 @@ typedef struct{
 	int size;
 	} Stack;
 	
+Stack newStack ();
+
+void doubleStackSize(Stack *stp);
+
+void push (State s, Stack *stp);
+
+int isEmptyStack (Stack st);
+
+void stackEmptyError();
+
+State pop(Stack *stp);
+
+void freeStack (Stack st);
+	
 #endif
