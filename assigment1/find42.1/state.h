@@ -1,7 +1,8 @@
 #ifndef STATE_H
 #define STATE_H
 
-#include "list.h"
+//#include "listQueue.h"
+
 
 /* The type State is a data type that represents a possible state 
  * of a search problem. It can be a complicated structure, but it 
@@ -12,7 +13,8 @@
 
 typedef struct {
   int value;
-  List action;
+  int action;
+  int cost;
 } State;
 
 #endif

@@ -2,8 +2,8 @@
 #define STATE_H
 
 typedef struct {
-	int value;
-	int depth;
-	} State;
+	int cost;
+	int *queens;
+} State;
 
 #endif

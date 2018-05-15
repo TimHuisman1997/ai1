@@ -1,10 +1,12 @@
 #ifndef LIST_H
 #define LIST_H
 
+#include "state.h"
+
 typedef struct ListNode* List;
 
 struct ListNode {
-  int item;
+  State item;
   List next;
 };
 
@@ -14,9 +16,9 @@ int isEmptyList (List li);
 
 void listEmptyError();
 
-List addItem(int n, List li);
+List addItem(State n, List li);
 
-int firstItem(List li);
+State firstItem(List li);
 
 List removeFirstNode(List li);
 
@@ -30,14 +32,18 @@ void visitListRec(List li);
 
 void listTooShort();
 
-int itemAtPos(List li, int p);
+State itemAtPos(List li, int p);
 
-List addItemAtPos(List li, int n, int p);
+List removeItemAtPos(List li, int p, State *s);
 
-List addItemAtPosIt(List li, int n, int p);
+List addItemAtPos(List li, State n, int p);
+
+List addItemAtPosIt(List li, State n, int p);
 
 List removeItem(List li, int n);
 
 List removeItemIt(List li, int n);
+
+List insertInOrder(List li, State n);
 
 #endif

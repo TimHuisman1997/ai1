@@ -5,6 +5,7 @@
 #include <assert.h>
 
 #include "list.h"
+#include "state.h"
 
 List newEmptyList() {
   return NULL;
@@ -19,7 +20,7 @@ void listEmptyError() {
   abort();
 }
 
-List addItem(int n, List li) {
+List addItem(State n, List li) {
   List newList = malloc(sizeof(struct ListNode));
   assert(newList!=NULL);
   newList->item = n;
@@ -27,7 +28,7 @@ List addItem(int n, List li) {
   return newList;
 }
 
-int firstItem(List li) {
+State firstItem(List li) {
   if ( li == NULL ) {
     listEmptyError();
   }
@@ -55,7 +56,7 @@ void freeList(List li) {
 }
 
 void visit(List li) {
-  printf("%d ",li->item);
+  printf("%d ",li->item.cost);
 }
 
 void visitList(List li) {
@@ -78,7 +79,7 @@ void listTooShort() {
   abort();
 }
 
-int itemAtPos(List li, int p) {
+State itemAtPos(List li, int p) {
   if ( li == NULL ) {
     listTooShort();
   }
@@ -89,7 +90,20 @@ int itemAtPos(List li, int p) {
   }
 }
 
-List addItemAtPos(List li, int n, int p) {
+List removeItemAtPos(List li, int p, State *s) {
+  if ( li == NULL ) {
+    listTooShort();
+  }
+  if ( p==0 ) {
+    *s = firstItem(li);
+    return removeFirstNode(li);
+    
+  } else {
+    return removeItemAtPos(li->next,p-1, s);
+  }
+}
+
+List addItemAtPos(List li, State n, int p) {
   if ( p==0 ) {
     return addItem(n,li);
   }
@@ -100,7 +114,7 @@ List addItemAtPos(List li, int n, int p) {
   return li;
 }
 
-List addItemAtPosIt(List li, int n, int p) {
+List addItemAtPosIt(List li, State n, int p) {
   List li1;
   if ( p==0 ) {
     return addItem(n,li);
@@ -122,7 +136,7 @@ List removeItem(List li, int n) {
   if ( li == NULL ) {
     return li;
   }
-  if ( li->item == n ) {
+  if ( li->item.cost == n ) {
     return removeFirstNode(li);
   }
   li->next = removeItem(li->next,n);
@@ -134,11 +148,11 @@ List removeItemIt(List li, int n) {
   if ( li == NULL) {
     return li;
   }
-  if ( li->item == n ) {
+  if ( li->item.cost == n ) {
     return removeFirstNode(li);
   }
   li1 = li;
-  while ( li1->next != NULL && (li1->next)->item != n ) {
+  while ( li1->next != NULL && (li1->next)->item.cost != n ) {
     li1 = li1->next;
   }
   if ( li1->next!=NULL ) {  /* so (li1->next)->item == n */
@@ -146,3 +160,15 @@ List removeItemIt(List li, int n) {
   }
   return li;
 }
+
+List insertInOrder(List li, State n) {
+	if ( li==NULL || n.cost < (li->item).cost ) {
+		return addItem(n, li);
+	}
+	if((li->item).cost < n.cost){
+		li->next = insertInOrder(li->next, n);
+	}
+	return li;
+}
+
+
