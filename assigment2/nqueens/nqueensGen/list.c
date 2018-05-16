@@ -55,24 +55,6 @@ void freeList(List li) {
   return;
 }
 
-void visit(List li) {
-  printf("%d ",li->item.cost);
-}
-
-void visitList(List li) {
-  while ( li != NULL) {
-    visit(li);
-    li = li->next;
-	}
-}
-
-void visitListRec(List li) {
-  if (li == NULL) {
-    return;
-  }
-  visit(li);
-  visitListRec(li->next);
-}
 
 void listTooShort() {    
   printf("List too short\n");
@@ -162,7 +144,7 @@ List removeItemIt(List li, int n) {
 }
 
 List insertInOrder(List li, State n) {
-	if ( li==NULL || n.cost < (li->item).cost ) {
+	if ( li==NULL || n.cost <= (li->item).cost ) {
 		return addItem(n, li);
 	}
 	if((li->item).cost < n.cost){
@@ -170,5 +152,3 @@ List insertInOrder(List li, State n) {
 	}
 	return li;
 }
-
-

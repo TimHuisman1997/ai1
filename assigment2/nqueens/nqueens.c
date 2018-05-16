@@ -5,6 +5,7 @@
 #include <math.h>
 #include <time.h>
 
+
 #define MAXQ 100
 
 #define FALSE 0
@@ -30,7 +31,7 @@ void initializeRandomGenerator() {
 void initiateQueens(int flag) {
   int q;
   for (q = 0; q < nqueens; q++) {
-    queens[q] = (flag == 0? 0 : random()%nqueens); 
+    queens[q] = (flag == 0? 0 : rand()%nqueens); 
   }
 }
 
@@ -160,7 +161,7 @@ void randomSearch() {
       /* change in random new location */
       newpos = pos;
       while (newpos == pos) {
-        newpos = random() % nqueens;
+        newpos = rand() % nqueens;
       }
       moveQueen(queen, newpos);
     }
@@ -174,9 +175,62 @@ void randomSearch() {
 
 /*************************************************************/
 
-void hillClimbing() {
-  printf("Implement the routine hillClimbing() yourself!!\n");
+void arrayCopy(int *ar1, int *arr){
+	
+	for( int i = 0; i < nqueens; i++){
+		arr[i] = ar1[i];
+	}
 }
+
+int sameArray(int* ar1, int* ar2){
+	for(int i=0; i<nqueens; i++){
+		if(ar1[i] != ar2[i]){
+			return 0;
+		}
+	}
+	return 1;
+}
+
+void hillClimbing(int *count, int *solved) {
+  int queen, iter = 0;
+  int optimum = (nqueens-1)*nqueens/2;
+  int *bestNeighbour = malloc(sizeof(int)*MAXQ);
+  int pos, best;
+  
+
+  while (evaluateState() != optimum) {
+	  if ( *count < evaluateState()){
+		  *count = evaluateState();
+	  }
+    printf("iteration %d: evaluation=%d\n", iter++, evaluateState());
+    arrayCopy(queens, bestNeighbour);
+    best = countConflicts();
+ 
+    if (iter == MAXITER) break;  /* give up */
+    /* generate a (new) random state: for each queen do ...*/
+    for (queen=0; queen < nqueens; queen++) {
+		pos = queens[queen];
+		for(int i = 0; i<nqueens; i++){
+			if(queens[i] != pos){
+				moveQueen(queen, i);
+				if(countConflicts() < best){
+					arrayCopy(queens, bestNeighbour);
+				}
+			}
+		}
+		queens[queen] = pos;
+	}
+	arrayCopy(bestNeighbour, queens);
+  }
+  if (iter < MAXITER) {
+    printf ("Solved puzzle. ");
+    *solved+=1;
+  }
+  printf ("Final state is");
+  printState();
+}
+
+
 
 /*************************************************************/
 
@@ -187,6 +241,7 @@ void simulatedAnnealing() {
 
 int main(int argc, char *argv[]) {
   int algorithm;
+  int count = 0, meanCount = 0, solved = 0; 
 
   do {
     printf ("Number of queens (1<=nqueens<%d): ", MAXQ);
@@ -200,17 +255,21 @@ int main(int argc, char *argv[]) {
   } while ((algorithm < 1) || (algorithm > 3));
   
   initializeRandomGenerator();
-
+ for(int i = 0; i < 100; i++){
   initiateQueens(1);
   
   printf("\nInitial state:");
   printState();
-
+	
   switch (algorithm) {
   case 1: randomSearch();       break;
-  case 2: hillClimbing();       break;
+  case 2: hillClimbing(&count, &solved);       break;
   case 3: simulatedAnnealing(); break;
   }
+  meanCount += count;
+  count = 0;
+}
+printf("mean evaluation: %d\namount solved: %d\nsucces porcentage: %.2lf\n", meanCount/100, solved, solved/100.0);
 
   return 0;  
 }

@@ -9,8 +9,10 @@
 
 
 #define MAXQ 100
-#define POP 500
-#define SAMPS 8
+#define POPULATION 100
+#define SAMPLE_SIZE 50
+#define CHANCE_MUTATION 2
+#define MAX_ITER 100000
 
 #define FALSE 0
 #define TRUE  1
@@ -26,9 +28,11 @@ void swap(int *x, int *y){
 }
 
 void initializeRandomGenerator() {
-  /* this routine initializes the random generator. */
-
-  srand((unsigned int) time(NULL));
+  /* this routine initializes the random generator. You are not
+   * supposed to understand this code. You can simply use it.
+   */
+  time_t t;
+  srand((unsigned) time(&t));
 }
 
 int inConflict(int row0, int column0, int row1, int column1) {
@@ -57,23 +61,11 @@ State makeState(){
 	State s;
 	s.queens = malloc(sizeof(int)*nqueens);
 	for (int i = 0; i < nqueens; i++){
-		s.queens[i] = (random()%nqueens);
+		s.queens[i] = (rand()%nqueens);
 	}
 	s.cost = countConflicts(s.queens);
 	return s;
 }
-
-List makePopulation(List li){
-	State s;
-	
-	for(int i = 0; i < POP; i++){
-		s = makeState();
-		li = addItem(s, li);
-	}
-	
-	return li;
-}
-
 void printState(State s){
 	for(int i = 0; i < nqueens; i++){
 		printf("%d ", s.queens[i]);
@@ -81,10 +73,32 @@ void printState(State s){
 	printf("cost: %d\n", s.cost);
 }
 
+List makePopulation(List li){
+	State s;
+	
+	for(int i = 0; i < POPULATION; i++){
+		s = makeState();
+		//printState(s);
+		li = addItem(s, li);
+	}
+	
+	return li;
+}
+
+
+
 State mutation(State s){
-	int n = random()%20;
+	int n = rand()%CHANCE_MUTATION, m;
 	switch(n){
-		case 1: s.queens[random()%nqueens] = random()%nqueens;
+		case 1: s.queens[rand()%nqueens] = rand()%nqueens;
+
+		break;
+		case 2: do{
+					m = rand()%nqueens;
+				}while(m==n);
+				
+				swap(&(s.queens[m]), &(s.queens[n]));
+
 		break;
 	}
 	
@@ -103,33 +117,73 @@ void offSpring(State* s1, State* s2){
 	
 }
 
+int inConflictWithAnotherQueen(int row, int col, int *queens) {
+  int queen;
+  for (queen=0; queen < nqueens; queen++) {
+    if (inConflict(row, col, queen, queens[queen])) {
+      if ((row != queen) || (col != queens[queen])) return TRUE;
+    }
+  }
+  return FALSE;
+}
 
-	
+void printBoard(int *queens) {
+  int row, column; 
+  printf("\n");
+  for(row = 0; row < nqueens; row++) {
+    for(column = 0; column < nqueens; column++) {
+      if (queens[row] != column) {
+        printf (".");
+      } else {
+        if (inConflictWithAnotherQueen(row, column, queens)) {
+          printf("Q");
+        } else {
+          printf("q");
+        }
+      }
+    }
+    printf("\n");
+  }
+}
 
 void geneticSearch(List li){
 	PrioQueue sample = newEmptyQueue();
 	State parent1, parent2, tempS;
-	for(int j = 0; j < 1000; j++){
+	int goalReached = 0, count = 0;
+	for(int j = 0; j < MAX_ITER; j++){
+		visitListRec(li);
+		count += 1;
+		for(int i = 0; i < SAMPLE_SIZE; i++){
+			li = removeItemAtPos(li, rand()%(POPULATION-i), &tempS);
+			enqueue(tempS, &sample);
+		}
 		
-	for(int i = 0; i < SAMPS; i++){
-		li = removeItemAtPos(li, random()%(nqueens-i), &tempS);
-		enqueue(tempS, &sample);
+		while(!isEmptyQueue(sample)){
+			parent1 = removeMax(&sample);
+			parent2 = removeMax(&sample);
+			offSpring(&parent1, &parent2);
+			if(parent1.cost == 0){
+				printf("goal Reached!");
+				printBoard(parent1.queens);
+				goalReached = 1;
+				break;
+			}	
+			if(parent2.cost == 0){
+				printf("goal Reached!");
+				printBoard(parent2.queens);
+				goalReached = 1;
+			}
+			
+			li = addItem(parent1, li);
+			li = addItem(parent2, li);
+		}
+		if(goalReached == 1) {
+			printf("generation: %d\n", count);
+			return;
+		}
 	}
-	
-	parent1 = removeMax(&sample);
-	parent2 = removeMax(&sample);
-	offSpring(&parent1, &parent2);
-	printState(parent1);
-	if(parent1.cost == 0 || parent2.cost == 0){
-		printf("goal reached\n");
-		break;
-	}
-	while(!isEmptyQueue(sample)){
-		li = addItem(removeMax(&sample), li);
-	}
-	li = addItem(parent1, li);
-	li = addItem(parent2, li);
-}
+	printf("goal not reached\n");
+
 }
 
 	
@@ -137,15 +191,15 @@ void geneticSearch(List li){
 
 int main(int argc, char *argv[]){
 	List pool = newEmptyList();
-	
+	initializeRandomGenerator();	
+
 	do{
 		printf("Number of queens (1<=nqueens<%d): ", MAXQ);
 		scanf("%d", &nqueens);
 	} while ((nqueens < 1) || (nqueens > MAXQ));
 	
 	pool = makePopulation(pool);
-	
-	geneticSearch(pool);
+	geneticSearch(pool);	
 
 	
 	return 0;
