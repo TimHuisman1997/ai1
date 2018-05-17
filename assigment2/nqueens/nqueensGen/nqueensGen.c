@@ -12,7 +12,7 @@
 #define POPULATION 100
 #define SAMPLE_SIZE 50
 #define CHANCE_MUTATION 2
-#define MAX_ITER 100000
+#define MAX_ITER 10000000
 
 #define FALSE 0
 #define TRUE  1
@@ -20,6 +20,16 @@
 #define ABS(a) ((a) < 0 ? (-(a)) : (a))
 
 int nqueens;
+
+void swap(int *x, int *y){
+	*x = *x + *y;
+	*y = *x - *y;
+	*x = *x - *y;
+}
+
+void initializeRandomGenerator() {
+  /* this routine initializes the random generator. You are not
+   * suppint nqueens;
 
 void swap(int *x, int *y){
 	*x = *x + *y;
@@ -66,6 +76,50 @@ State makeState(){
 	s.cost = countConflicts(s.queens);
 	return s;
 }
+
+void printState(State s){
+	for(int i = 0; i < nqueens; i++){
+		printf("%d ", s.queens[i]);
+	}
+	printf("cost: %d\n", s.cost);
+}osed to understand this code. You can simply use it.
+   */
+  time_t t;
+  srand((unsigned) time(&t));
+}
+
+int inConflict(int row0, int column0, int row1, int column1) {
+  if (row0 == row1) return TRUE; /* on same row, */
+  if (column0 == column1) return TRUE; /* column, */
+  if (ABS(row0-row1) == ABS(column0-column1)) return TRUE;/* diagonal */
+  return FALSE; /* no conflict */
+}
+
+int countConflicts(int *queens) {
+  int cnt = 0;
+  int queen, other;
+  for (queen=0; queen < nqueens; queen++) {
+    for (other=queen+1; other < nqueens; other++) {
+      if (inConflict(queen, queens[queen], other, queens[other])) {
+        cnt++;
+      }
+    }
+  }
+  return cnt;
+}
+
+
+
+State makeState(){
+	State s;
+	s.queens = malloc(sizeof(int)*nqueens);
+	for (int i = 0; i < nqueens; i++){
+		s.queens[i] = (rand()%nqueens);
+	}
+	s.cost = countConflicts(s.queens);
+	return s;
+}
+
 void printState(State s){
 	for(int i = 0; i < nqueens; i++){
 		printf("%d ", s.queens[i]);
@@ -146,21 +200,23 @@ void printBoard(int *queens) {
   }
 }
 
-void geneticSearch(List li){
+void geneticSearch(List li, int *count){
 	PrioQueue sample = newEmptyQueue();
 	State parent1, parent2, tempS;
-	int goalReached = 0, count = 0;
+	int goalReached = 0;
 	for(int j = 0; j < MAX_ITER; j++){
-		visitListRec(li);
-		count += 1;
+		*count += 1;
+		//printf("x\n");
 		for(int i = 0; i < SAMPLE_SIZE; i++){
+			//printf("queue size: %d\n", sample.queueSize);
 			li = removeItemAtPos(li, rand()%(POPULATION-i), &tempS);
 			enqueue(tempS, &sample);
 		}
-		
 		while(!isEmptyQueue(sample)){
 			parent1 = removeMax(&sample);
 			parent2 = removeMax(&sample);
+			//printState(parent1);
+			//printState(parent2);
 			offSpring(&parent1, &parent2);
 			if(parent1.cost == 0){
 				printf("goal Reached!");
@@ -178,9 +234,10 @@ void geneticSearch(List li){
 			li = addItem(parent2, li);
 		}
 		if(goalReached == 1) {
-			printf("generation: %d\n", count);
+			printf("generation: %d", *count);
 			return;
 		}
+		
 	}
 	printf("goal not reached\n");
 
@@ -190,17 +247,14 @@ void geneticSearch(List li){
 
 
 int main(int argc, char *argv[]){
-	List pool = newEmptyList();
-	initializeRandomGenerator();	
-
-	do{
-		printf("Number of queens (1<=nqueens<%d): ", MAXQ);
-		scanf("%d", &nqueens);
-	} while ((nqueens < 1) || (nqueens > MAXQ));
+	State *pool = malloc(sizeof(State)*POPULATION);
+	initializeRandomGenerator();
+	
+	printf("Number of queens (1<=nqueens<%d): ", MAXQ);
+	scanf("%d", &nqueens);
 	
 	pool = makePopulation(pool);
-	geneticSearch(pool);	
-
+	geneticSearch(pool, &count);
 	
 	return 0;
 }

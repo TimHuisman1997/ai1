@@ -41,6 +41,7 @@ List removeFirstNode(List li) {
     listEmptyError();
   }
   returnList = li->next;
+  free(li->item.queens);
   free(li);
   return returnList;
 }
@@ -49,6 +50,7 @@ void freeList(List li) {
   List li1;
   while ( li != NULL ) {
     li1 = li->next;
+    free((li->item.queens));
     free(li);
     li = li1;
   }
@@ -81,7 +83,8 @@ List removeItemAtPos(List li, int p, State *s) {
     return removeFirstNode(li);
     
   } else {
-    return removeItemAtPos(li->next,p-1, s);
+	li->next = removeItemAtPos(li->next,p-1, s); 
+    return li;
   }
 }
 
@@ -147,7 +150,7 @@ List insertInOrder(List li, State n) {
 	if ( li==NULL || n.cost <= (li->item).cost ) {
 		return addItem(n, li);
 	}
-	if((li->item).cost < n.cost){
+	if((li->item).cost <= n.cost){
 		li->next = insertInOrder(li->next, n);
 	}
 	return li;
